@@ -6,6 +6,6 @@ export default function Footer(){ return (
         <div className="p-2 bg-gray-200"><img src="/logo.png" alt="" width={100}/></div>
         <p>&copy; CoDraw {new Date().getFullYear()} | All Rights Reserved.</p>
       </div>
-      <p>Designed and Developed by <a href="https://github.com" target="_blank"><span className="underline">Arth Dholakia</span></a></p>
+      <p>Designed and Developed by <a href="https://github.com/arthsonani" target="_blank"><span className="underline">Arth Dholakia</span></a></p>
     </footer>
   );}
