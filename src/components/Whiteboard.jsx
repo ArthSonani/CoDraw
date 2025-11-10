@@ -67,9 +67,26 @@ const Whiteboard = () => {
     }
   };
 
+  
+
+  
+  // Load existing whiteboard data into canvas
+  useEffect(() => {
+    if (canvas && initialData) {
+      isUpdatingFromSocketRef.current = true;
+      canvas.loadFromJSON(initialData, () => {
+        canvas.renderAll();
+        canvas.calcOffset();
+        canvas.requestRenderAll();
+        isUpdatingFromSocketRef.current = false;
+      });
+      socketRef.current.emit("join-board", {boardId, data: initialData, role: "host"});
+    }
+  }, [canvas, initialData]);
+
   useEffect(() => {
     if(!canvas) return;
-    const socket = io("http://localhost:3000/"); 
+    const socket = io("http://localhost:3000/"); // adjust backend URL if needed
     socketRef.current = socket;
   
     const handleCanvasUpdate = ({ boardId: incomingId, data }) => {
