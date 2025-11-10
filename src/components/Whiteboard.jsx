@@ -208,7 +208,106 @@ const Whiteboard = () => {
       setShowAIModal(false);
     }
   };
+  
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    if (canvas) {
+      const handleKeyDown = (event) => {
+        if (event.key == "Delete" || event.keyCode == 46 && canvas.getActiveObjects().length > 0) {
+          canvas.getActiveObjects().forEach(obj => canvas.remove(obj));
+          canvas.discardActiveObject();
+          canvas.renderAll();
+        }
+        if (event.key === "Escape") {
+          disableFreeDraw();
+          canvas.discardActiveObject();
+          canvas.renderAll();
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown);
+      return () => document.removeEventListener("keydown", handleKeyDown);
+    }
+  }, [canvas]);
+
+  // Drawing and shape tools
+  const addCircle = () => {
+    if (canvas) {
+      disableFreeDraw();
+      const cir = new Cir({ radius: 50, top: 250, left: 350, fill: "#000" });
+      canvas.add(cir);
+    }
+  };
+
+  const addRectangle = () => {
+    if (canvas) {
+      disableFreeDraw();
+      const rect = new Rect({ top: 250, left: 350, width: 100, height: 100, fill: "#000" });
+      canvas.add(rect);
+    }
+  };
+
+  const addTextBox = () => {
+    if (canvas) {
+      disableFreeDraw();
+      const tb = new Textbox("Enter Text", {
+        top: 250,
+        left: 350,
+        width: 150,
+        fontSize: 20,
+        textAlign: 'center',
+        fixedWidth: 150
+      });
+
+      canvas.on('text:changed', (opt) => {
+        const t1 = opt.target;
+        if (t1.width > t1.fixedWidth) {
+          t1.fontSize *= t1.fixedWidth / (t1.width + 1);
+          t1.width = t1.fixedWidth;
+        }
+      });
+
+      canvas.add(tb);
+    }
+  };
+
+  const enableFreeDraw = () => {
+    if (canvas) {
+      setFreeDrawingEnabled(true);
+      canvas.isDrawingMode = true;
+      canvas.freeDrawingBrush = new PencilBrush(canvas);
+      canvas.freeDrawingBrush.color = '#000000';
+      canvas.freeDrawingBrush.width = brushWidth;
+    }
+  };
+
+  const disableFreeDraw = () => {
+    if (canvas) {
+      setFreeDrawingEnabled(false);
+      canvas.isDrawingMode = false;
+      canvas.selection = true;
+      canvas.forEachObject((obj) => (obj.selectable = true));
+    }
+  };
+
+  const updateBrushColor = (e) => {
+    if (canvas) canvas.freeDrawingBrush.color = e.target.value;
+  };
+
+  const updateBrushWidth = (e) => {
+    const newWidth = parseInt(e.target.value, 10) || 1;
+    setBrushWidth(newWidth);
+    if (canvas?.isDrawingMode) canvas.freeDrawingBrush.width = newWidth;
+  };
+
+  const clearCanvas = () => {
+    if (canvas) {
+      canvas.clear();
+      canvas.backgroundColor = "#fff";
+      canvas.renderAll();
+    }
+  };
 
   const exportCanvasAsImage = () => {
     if (!canvas) return;
