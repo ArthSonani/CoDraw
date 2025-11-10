@@ -24,7 +24,7 @@ const Whiteboard = () => {
   // Load initial whiteboard data
   useEffect(() => {
     if (!location.state?.data) {
-        axios.get(`http://localhost:3000/api/whiteboards/${boardId}`, { withCredentials: true })
+  axios.get(`http://localhost:3000/api/whiteboards/${boardId}`, { withCredentials: true })
         .then(res => {
           if (res.data?.data) setInitialData(res.data.data);
         })
@@ -125,7 +125,7 @@ const Whiteboard = () => {
 
   useEffect(() => {
     if(!canvas) return;
-    const socket = io("http://localhost:3000/"); // adjust backend URL if needed
+    const socket = io("http://localhost:3000/");
     socketRef.current = socket;
   
     const handleCanvasUpdate = ({ boardId: incomingId, data }) => {
