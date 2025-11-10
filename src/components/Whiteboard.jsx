@@ -67,6 +67,45 @@ const Whiteboard = () => {
     }
   };
 
+  // Initialize canvas on mount
+  useEffect(() => {
+    if (canvasRef.current) {
+      const initCanvas = new Canvas(canvasRef.current, {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        enableRetinaScaling: true
+      });
+
+      initCanvas.backgroundColor = '#fff';
+      initCanvas.renderAll();
+      setCanvas(initCanvas);
+      return () => initCanvas.dispose();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!canvas) return;
+  
+    const emitOnAdd = () => {
+      if (!isUpdatingFromSocketRef.current) emitCanvasData();
+    };
+  
+    const emitOnModify = () => {
+      if (!isUpdatingFromSocketRef.current) emitCanvasData();
+    };
+  
+    canvas.on("object:added", emitOnAdd);
+    canvas.on("object:modified", emitOnModify);
+    canvas.on("object:removed", emitOnModify);
+    canvas.on("path:created", emitOnAdd);
+  
+    return () => {
+      canvas.off("object:added", emitOnAdd);
+      canvas.off("object:modified", emitOnModify);
+      canvas.off("object:removed", emitOnModify);
+      canvas.off("path:created", emitOnAdd);
+    };
+  }, [canvas]);
   
 
   
