@@ -1,0 +1,332 @@
+import React, { useRef, useState, useEffect } from 'react';
+import { Canvas, PencilBrush, Textbox, Rect, Circle as Cir } from 'fabric';
+import { Square, Circle, Type, Move, Pencil, Trash2, Save, Download, Copy } from 'lucide-react';
+import Settings from './Settings';
+import axios from "axios";
+import { useParams, useLocation, useNavigate } from "react-router-dom";
+import io from "socket.io-client";
+import GroupVoiceChat from './GroupVoiceChat';
+
+const Whiteboard = () => {
+  const { boardId } = useParams();
+  const canvasRef = useRef(null);
+  const [canvas, setCanvas] = useState(null);
+  const [brushWidth, setBrushWidth] = useState(5);
+  const [freeDrawingEnabled, setFreeDrawingEnabled] = useState(false);
+  const [initialData, setInitialData] = useState(null);
+  const navigate = useNavigate();
+  const socketRef = useRef(null);
+  const isUpdatingFromSocketRef = useRef(false);
+  const [showAIModal, setShowAIModal] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  
+
+  // Load initial whiteboard data
+  useEffect(() => {
+    if (!location.state?.data) {
+        axios.get(`http://localhost:3000/api/whiteboards/${boardId}`, { withCredentials: true })
+        .then(res => {
+          if (res.data?.data) setInitialData(res.data.data);
+        })
+        .catch(err => {
+          if (err.response && (err.response.status === 403)) {
+            alert('Access Denied. Redirecting to Home...');
+            navigate('/');
+          }else if(err.response && err.response.status === 404){
+            console.warn('Whiteboard not found. Creating new one...');
+            if (canvas) {
+              const whiteboardData = JSON.stringify(canvas.toJSON());
+              const previewImage = canvas.toDataURL('image/png');
+
+              axios.post(
+                "http://localhost:3000/api/whiteboards/save",
+                { boardId, data: whiteboardData, previewImage },
+                { withCredentials: true }
+              )
+              .then(() => console.log("New whiteboard created and saved."))
+              .catch(err => console.error("Failed to create new whiteboard on 404:", err));
+            }
+          } 
+          else {
+            console.error('Error fetching whiteboard:', err);
+          }
+          
+        });
+    } else {
+      setInitialData(location.state.data);
+    }
+  }, [boardId, location.state?.data]);
+
+  
+
+  const emitCanvasData = () => {
+    if (!isUpdatingFromSocketRef.current && canvas && socketRef.current) {
+      const json = JSON.stringify(canvas.toJSON());
+      socketRef.current.emit("canvas-data", { boardId, data: json });
+      console.log("Change emitted")
+    }
+  };
+
+  useEffect(() => {
+    if(!canvas) return;
+    const socket = io("http://localhost:3000/"); 
+    socketRef.current = socket;
+  
+    const handleCanvasUpdate = ({ boardId: incomingId, data }) => {
+      if (incomingId === boardId && canvas) {
+        isUpdatingFromSocketRef.current = true;
+        canvas.loadFromJSON(data, () => {
+          canvas.renderAll();
+          isUpdatingFromSocketRef.current = false;
+        });
+      }
+    };
+
+    // Listen for updates
+    socket.on("canvas-data", handleCanvasUpdate);
+
+    socket.on("viewer-joined", ({ boardId, socketId, timestamp }) => {
+      alert(`A viewer has joined board ${boardId}`);
+      fetch('/api/metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'viewer-joined',
+          boardId: boardId,
+          timestamp: new Date().toISOString()
+        })
+      }).then(res => res.json())
+      .then(data => console.log("Metric logged:", data))
+      .catch(err => console.error("Metric logging failed:", err));
+      console.log(`Viewer socket ${socketId} joined at ${timestamp}`);
+    });
+    
+    return () => {
+      socket.off("canvas-data", handleCanvasUpdate);
+      socket.disconnect();
+    };
+  }, [boardId, canvas]);
+
+  // Save canvas to backend
+  const saveWhiteboard = async () => {
+    if (!canvas) return;
+    const whiteboardData = JSON.stringify(canvas.toJSON());
+    const previewImage = canvas.toDataURL('image/png');
+
+    try {
+      // 1. Upload image preview to Cloudinary via backend
+      const uploadResponse = await axios.post(
+        "http://localhost:3000/api/whiteboards/upload-preview",
+        { image: previewImage }, // send base64 string directly
+        { withCredentials: true }
+      );
+  
+      const cloudinaryUrl = uploadResponse.data.url;
+  
+      // 2. Save the whiteboard with the image URL
+        await axios.post(
+        "http://localhost:3000/api/whiteboards/save",
+        { boardId, data: whiteboardData, previewImage: cloudinaryUrl },
+        { withCredentials: true }
+      );
+
+      fetch('/api/metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'Whiteboard Saved',
+          boardId: boardId,
+          timestamp: new Date().toISOString()
+        })
+      }).then(res => res.json())
+      .then(data => console.log("Metric logged:", data))
+      .catch(err => console.error("Metric logging failed:", err));
+  
+      alert("Whiteboard saved successfully!");
+    } catch (error) {
+      console.error("Error saving whiteboard:", error);
+      alert("Failed to save whiteboard");
+    }
+  };
+
+  const openAIModal = () => {
+    setAiPrompt("");
+    setShowAIModal(true);
+  };
+
+  const submitAIPrompt = async () => {
+    if (!aiPrompt) return;
+  
+    try {
+      const res = await fetch('/api/text-to-drawing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: aiPrompt })
+      });
+  
+      const data = await res.json();
+      const instructions = JSON.parse(data.text);
+  
+      instructions.forEach(obj => {
+        if (obj.type === 'circle') {
+          const circle = new Cir({
+            left: obj.x,
+            top: obj.y,
+            radius: obj.radius || 30,
+            fill: obj.color || 'yellow'
+          });
+          canvas.add(circle);
+        } else if (obj.type === 'rect') {
+          const rect = new Rect({
+            left: obj.x,
+            top: obj.y,
+            width: obj.width || 100,
+            height: obj.height || 50,
+            fill: obj.color || 'blue'
+          });
+          canvas.add(rect);
+        }
+      });
+
+      fetch('/api/metrics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'AI text-to-drawing used!',
+          boardId: boardId,
+          timestamp: new Date().toISOString()
+        })
+      }).then(res => res.json())
+      .then(data => console.log("Metric logged:", data))
+      .catch(err => console.error("Metric logging failed:", err));
+  
+      canvas.renderAll();
+    } catch (err) {
+      console.error("AI Drawing failed:", err);
+      alert("Failed to draw from AI. Check console for error.");
+    } finally {
+      setShowAIModal(false);
+    }
+  };
+
+
+  const exportCanvasAsImage = () => {
+    if (!canvas) return;
+    const dataURL = canvas.toDataURL({ format: 'png', quality: 1.0 });
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = `whiteboard-${boardId}.png`;
+    link.click();
+  };
+
+  return (
+    <div className="relative overflow-hidden">
+      <div className="toolbar absolute top-[2%] z-[20] shadow-lg left-1/2 -translate-x-1/2 bg-gray-100 rounded-[10px] flex gap-5 px-3 py-3 justify-center  items-center">
+        <button onClick={disableFreeDraw} className='cursor-pointer hover:bg-[#8f00ff]/80 hover:text-white p-1 rounded-[5px]' title='Move'><Move size={20} /></button>
+        <button onClick={addRectangle} className='cursor-pointer hover:bg-[#8f00ff]/80 hover:text-white p-1 rounded-[5px]' title='Square'><Square size={20} /></button>
+        <button onClick={addCircle} className='cursor-pointer hover:bg-[#8f00ff]/80 hover:text-white p-1 rounded-[5px]' title='Circle'><Circle size={20} /></button>
+        <button onClick={addTextBox} className='cursor-pointer hover:bg-[#8f00ff]/80 hover:text-white p-1 rounded-[5px]' title='TextBox'><Type size={20} /></button>
+        <button onClick={enableFreeDraw} className='cursor-pointer hover:bg-[#8f00ff]/80 hover:text-white p-1 rounded-[5px]' title='Free Draw'><Pencil size={20} /></button>
+
+        {freeDrawingEnabled && (
+          <div className='flex items-center gap-2 bg-gray-100 px-[10px] py-[6px] font-mono rounded-[10px] text-sm'>
+            <input type="color" onChange={updateBrushColor} />
+            <label className='flex items-center gap-1'>
+              Width:
+              <input type="number" min="1" max="50" value={brushWidth} className='pl-1 border border-gray-300' onChange={updateBrushWidth} />
+            </label>
+          </div>
+        )}
+
+        <button onClick={clearCanvas} className='cursor-pointer bg-gray-100 hover:bg-[#8f00ff]/80 hover:text-white flex items-center gap-2 p-[10px] text-nowrap font-mono rounded-[10px] text-sm'>
+          <Trash2 size={15} /> clear canvas
+        </button>
+
+        <div className='h-[40px] w-[2px] bg-gray-200 block'></div>
+
+        <button onClick={saveWhiteboard} className='cursor-pointer hover:bg-[#8f00ff]/80 hover:text-white p-1 rounded-[5px]' title='Save Whiteboard'><Save size={20} /></button>
+        <button onClick={exportCanvasAsImage} className='cursor-pointer bg-white hover:bg-[#8f00ff]/80 hover:text-white flex items-center gap-2 p-[10px] font-mono text-nowrap rounded-[10px] text-sm'>
+          <Download size={20} /> Export as PNG
+        </button>
+        <div className='bg-white  flex items-center font-mono gap-2 rounded-[10px] py-[5px] px-[8px]'>
+          <h1 className='text-nowrap'>Join Code:</h1> 
+          <div 
+            className='cursor-pointer w-full bg-gray-100 hover:bg-[#8f00ff]/80 hover:text-white flex items-center gap-2 p-[5px] font-mono rounded-[5px] text-sm' 
+            onClick={() => {
+              const joinCode = boardId.slice(-6);
+              navigator.clipboard.writeText(joinCode)
+                .then(() => {
+                  alert('Copied to Clipboard');
+                })
+                .catch(err => {
+                  console.error('Failed to copy:', err);
+                });
+            }}
+          >
+            {boardId.slice(-6)} <Copy size={15}/>
+          </div>
+        </div>
+        <GroupVoiceChat boardId={boardId}/>
+      </div>
+
+      <Settings canvas={canvas} />
+      <div className='flex'>
+        <canvas id="canvas" ref={canvasRef}></canvas>
+      </div>
+
+      <button 
+        onClick={openAIModal}
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          borderRadius: '50%',
+          backgroundColor: '#111',
+          color: 'white',
+          border: 'none',
+          width: '60px',
+          height: '60px',
+          cursor: 'pointer',
+          fontSize: '1.5rem',
+          zIndex: 9999
+        }}
+        title="AI Drawing Assistant"
+      >
+        🤖
+      </button>
+
+      {showAIModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-[90%] max-w-md">
+            <h2 className="text-xl font-bold mb-4">AI Drawing Prompt</h2>
+            <input
+              type="text"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              placeholder="What should I draw for you?"
+              className="w-full border border-gray-300 rounded-md p-2 mb-4"
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowAIModal(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={submitAIPrompt}
+                className="px-4 py-2 bg-[#8f00ff] text-white rounded hover:bg-[#7500d1]"
+              >
+                Draw
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+    </div>
+  );
+};
+
+export default Whiteboard;
