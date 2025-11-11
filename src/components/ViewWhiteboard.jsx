@@ -14,6 +14,31 @@ const ViewWhiteboard = () => {
   const socketRef = useRef(null);
 
   useEffect(() => {
+    const initCanvas = new Canvas(canvasRef.current, {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      selection: false,
+      enableRetinaScaling: true
+    });
+    initCanvas.backgroundColor = "#fff";
+
+    initCanvas.on("object:added", (e) => {
+        if (e.target) {
+          e.target.selectable = false;
+          e.target.evented = false; 
+        }
+      });
+
+    initCanvas.renderAll();
+    setCanvas(initCanvas);
+    console.log("Canvas rendered")
+
+    return () => {
+      initCanvas.dispose();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!canvas) return;
 
     const socket = io("http://localhost:3000/");
