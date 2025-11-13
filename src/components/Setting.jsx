@@ -67,6 +67,52 @@ const Settings = ({ canvas }) => {
         }
     };
 
+    const handleWidthChange = (e) => {
+        const value = e.target.value.replace(/,/g, "");
+        const intValue = parseInt(value, 10);
+
+        setWidth(intValue);
+
+        if (selectedObject && selectedObject.type === "rect" && intValue >= 0) {
+            selectedObject.set({ width: intValue / selectedObject.scaleX });
+            canvas.renderAll();
+        }
+    }
+
+    const handleHeightChange = (e) => {
+        const value = e.target.value.replace(/,/g, "");
+        const intValue = parseInt(value, 10);
+
+        setHeight(intValue);
+
+        if (selectedObject && selectedObject.type === "rect" && intValue >= 0) {
+            selectedObject.set({ height: intValue / selectedObject.scaleY });
+            canvas.renderAll();
+        }
+    }
+
+    const handleDiameterChange = (e) => {
+        const value = e.target.value.replace(/,/g, "");
+        const intValue = parseInt(value, 10);
+
+        setDiameter(intValue);
+
+        if (selectedObject && selectedObject.type === "circle" && intValue >= 0) {
+            selectedObject.set({ radius: intValue / 2 / selectedObject.scaleX });
+            canvas.renderAll();
+        }
+    }
+
+    const handleColorChange = (e) => {
+        const value = e.target.value;
+        setColor(value);
+
+        if (selectedObject) {
+            selectedObject.set({ fill: value });
+            canvas.renderAll();
+        }
+    }
+
     const handleStrokeColor = (e) => {
         const value = e.target.value;
         setColor(value);
