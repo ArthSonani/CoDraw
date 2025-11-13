@@ -77,6 +77,54 @@ const Settings = ({ canvas }) => {
         }
     }
 
+    const handleStrokeWidthChange = (e) => {
+        const value = e.target.value.replace(/,/g, "");
+        const intValue = parseInt(value, 10);
+
+        setStrokeWidth(intValue);
+
+        if (selectedObject && selectedObject.type === "path" && intValue >= 0) {
+            selectedObject.set({ strokeWidth: intValue });
+            canvas.renderAll();
+        }
+    }
+
+    const handleFontChange = (e) => {
+        const selectedFont = e.target.value;
+        setFont(selectedFont);
+        if (selectedObject && selectedObject.type === "textbox") {
+            selectedObject.set({ fontFamily: selectedFont });
+            canvas.renderAll();
+        }
+    };
+
+    const handleFontSizeChange = (e) => {
+        const value = parseInt(e.target.value, 10);
+        setFontSize(value);
+        if (selectedObject && selectedObject.type === "textbox" && value > 0) {
+            selectedObject.set({ fontSize: value });
+            canvas.renderAll();
+        }
+    };
+
+    const handleTextColorChange = (e) => {
+        const value = e.target.value;
+        setTextColor(value);
+        if (selectedObject && selectedObject.type === "textbox") {
+            selectedObject.set({ fill: value });
+            canvas.renderAll();
+        }
+    };
+
+    const handleOpacityChange = (e) => {
+        const value = parseInt(e.target.value, 10);
+        setOpacity(value);
+        if (selectedObject) {
+            selectedObject.set({ opacity: value / 100 }); // Convert back to 0-1 range
+            canvas.renderAll();
+        }
+    };
+
     return (
         <>
         {selectedObject && (<div className="settings bg-gray-100 rounded-[10px] z-[20] p-5 absolute top-1/3 left-[2%] shadow-lg flex flex-col gap-5 -translate-y-1/3">
