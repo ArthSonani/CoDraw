@@ -3,7 +3,7 @@ import Peer from "peerjs";
 import { io } from "socket.io-client";
 import { Mic, MicOff, Volume2, VolumeX, PhoneOff, Phone } from "lucide-react";
 
-const socket = io("");
+const socket = io("http://localhost:3000/");
 
 export default function GroupVoiceChat({ boardId }) {
   const [peerId, setPeerId] = useState("");
