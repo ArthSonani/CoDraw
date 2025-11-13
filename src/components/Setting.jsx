@@ -67,6 +67,18 @@ const Settings = ({ canvas }) => {
         }
     };
 
+    const clearSettings = () => {
+        setWidth("");
+        setHeight("");
+        setColor("");
+        setDiameter("");
+        setStrokeWidth("");
+        setFont("Arial");
+        setFontSize(16);
+        setTextColor("#000000");
+        setOpacity(100);
+    };
+
     const handleWidthChange = (e) => {
         const value = e.target.value.replace(/,/g, "");
         const intValue = parseInt(value, 10);
