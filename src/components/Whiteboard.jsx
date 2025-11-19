@@ -24,7 +24,7 @@ const Whiteboard = () => {
   // Load initial whiteboard data
   useEffect(() => {
     if (!location.state?.data) {
-  axios.get(`http://localhost:3000/api/whiteboards/${boardId}`, { withCredentials: true })
+        axios.get(`http://localhost:3000/api/whiteboards/${boardId}`, { withCredentials: true })
         .then(res => {
           if (res.data?.data) setInitialData(res.data.data);
         })
