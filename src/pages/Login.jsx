@@ -15,12 +15,14 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
             setLoading(true);
+        try {
             await axios.post("http://localhost:3000/api/auth/login", formData, { withCredentials: true });
+            setLoading(false);
             navigate("/");
         } catch (error) {
             setError(error.response?.data?.message || "Login failed");
+            setLoading(false);
         }
     };
 
@@ -51,7 +53,7 @@ const Login = () => {
                         required
                     />
                     {error && <p className="text-red-500">{error}</p>}
-                    <button type="submit" className="bg-[#8f00ff] text-white text-2xl p-2 text-center rounded-[10px] cursor-pointer flex items-center justify-center gap-2">Login {loading && <Loader size={15}/>}</button>
+                    <button type="submit" className="bg-[#8f00ff] text-white text-2xl p-2 text-center rounded-[10px] cursor-pointer flex items-center justify-center gap-2">Login {loading && <Loader size={15} className="animate-spin"/>}</button>
                     <p>Don't have an account? <Link to={'/register'} className="underline">Register</Link></p>
                 </form>
             </div>
