@@ -15,12 +15,14 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setLoading(true);
         try {
-            setLoading(true);
             await axios.post("http://localhost:3000/api/auth/signup",  formData, { withCredentials: true });
+            setLoading(false);
             navigate("/");
         } catch (error) {
             setError(error.response?.data?.message || "Registration failed");
+            setLoading(false);
         }
     };
 
@@ -60,7 +62,7 @@ const Register = () => {
                     required
                 />
                 {error && <p className="text-red-500">{error}</p>}
-                <button type="submit" className="bg-[#8f00ff] text-white text-2xl p-2 text-center rounded-[10px] cursor-pointer flex items-center justify-center gap-2">Register {loading && <Loader size={15}/>}</button>
+                <button type="submit" className="bg-[#8f00ff] text-white text-2xl p-2 text-center rounded-[10px] cursor-pointer flex items-center justify-center gap-2">Register {loading && <Loader size={15} className="animate-spin" />}</button>
                 <p>Already have an account? <Link to={'/login'} className="underline">Login</Link></p>
             </form>
             </div>
