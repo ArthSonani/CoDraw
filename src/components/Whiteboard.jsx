@@ -179,7 +179,13 @@ const Whiteboard = () => {
           boardId: boardId,
           timestamp: new Date().toISOString()
         })
-      }).then(res => res.json())
+      }).then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Metrics POST failed: ${res.status} ${text}`);
+        }
+        return res.json();
+      })
       .then(data => console.log("Metric logged:", data))
       .catch(err => console.error("Metric logging failed:", err));
       console.log(`Viewer socket ${socketId} joined at ${timestamp}`);
@@ -222,7 +228,13 @@ const Whiteboard = () => {
           boardId: boardId,
           timestamp: new Date().toISOString()
         })
-      }).then(res => res.json())
+      }).then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Metrics POST failed: ${res.status} ${text}`);
+        }
+        return res.json();
+      })
       .then(data => console.log("Metric logged:", data))
       .catch(err => console.error("Metric logging failed:", err));
   
@@ -280,7 +292,13 @@ const Whiteboard = () => {
           boardId: boardId,
           timestamp: new Date().toISOString()
         })
-      }).then(res => res.json())
+      }).then(async res => {
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Metrics POST failed: ${res.status} ${text}`);
+        }
+        return res.json();
+      })
       .then(data => console.log("Metric logged:", data))
       .catch(err => console.error("Metric logging failed:", err));
   
