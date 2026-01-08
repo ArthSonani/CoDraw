@@ -9,12 +9,11 @@ const Home = () => {
     const [joinCode, setJoinCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
-    const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://codraw-backend-mw58.onrender.com/';
  
     useEffect(() => {
         
         setLoading(true);
-        axios.get(`${API_BASE}/api/whiteboards`, {
+        axios.get(`https://codraw-backend-mw58.onrender.com/api/whiteboards`, {
             withCredentials: true // include the cookie
         })
         .then(res => {
@@ -26,7 +25,7 @@ const Home = () => {
             console.error("Error fetching whiteboards:", err);
             setLoading(false);
         });
-    }, [API_BASE]);
+    }, []);
 
     const createWhiteboard = () => {
         const boardId = crypto.randomUUID();
@@ -45,7 +44,7 @@ const Home = () => {
         if (!confirm) return;
         try {
             setDeletingId(id);
-            await axios.delete(`${API_BASE}/api/whiteboards/${id}`, { withCredentials: true });
+            await axios.delete(`https://codraw-backend-mw58.onrender.com/api/whiteboards/${id}`, { withCredentials: true });
             setWhiteboards(prev => prev.filter(b => b._id !== id));
             // alert('Whiteboard deleted');
         } catch (err) {
