@@ -9,7 +9,7 @@ const Navbar = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await axios.get("https://codraw-backend-mw58.onrender.com/api/auth/me", {
+                const response = await axios.get("http://codraw-backend-mw58.onrender.com/api/auth/me", {
                     withCredentials: true,
                 });
                 setUser(response.data.user);
@@ -23,7 +23,7 @@ const Navbar = () => {
 
     const handleLogout = async () => {
         try {
-            await axios.post("https://codraw-backend-mw58.onrender.com/api/auth/logout", {}, { withCredentials: true });
+            await axios.post("http://codraw-backend-mw58.onrender.com/api/auth/logout", {}, { withCredentials: true });
             setUser(null);
             navigate("/login");
         } catch (error) {

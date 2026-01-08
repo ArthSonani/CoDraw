@@ -17,7 +17,7 @@ const Register = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await axios.post("https://codraw-backend-mw58.onrender.com/api/auth/signup",  formData, { withCredentials: true });
+            await axios.post("http://codraw-backend-mw58.onrender.com/api/auth/signup",  formData, { withCredentials: true });
             setLoading(false);
             navigate("/");
         } catch (error) {
@@ -62,7 +62,7 @@ const Register = () => {
                     required
                 />
                 {error && <p className="text-red-500">{error}</p>}
-                <button type="submit" className="bg-[#8f00ff] text-white text-2xl p-2 text-center rounded-[10px] cursor-pointer flex items-center justify-center gap-2">Register {loading && <Loader size={15} className="animate-spin" />}</button>
+                <button type="submit" disabled={loading} className="bg-[#8f00ff] text-white text-2xl p-2 text-center rounded-[10px] cursor-pointer flex items-center justify-center gap-2">Register {loading && <Loader size={15} className="animate-spin" />}</button>
                 <p>Already have an account? <Link to={'/login'} className="underline">Login</Link></p>
             </form>
             </div>

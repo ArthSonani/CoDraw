@@ -1,4 +1,5 @@
 import React from "react";
+import { Toaster } from "react-hot-toast";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from './pages/Login'
@@ -11,6 +12,7 @@ import ViewWhiteboard from './components/ViewWhiteboard';
 const App = () => {
     return (
         <Router>
+            <Toaster position="top-center" toastOptions={{ duration: 2000 }} />
             <Routes>
                 <Route element={<MainLayout />}>
                     <Route path="/" element={<Home />} />

@@ -17,7 +17,7 @@ const Login = () => {
         e.preventDefault();
             setLoading(true);
         try {
-            await axios.post("https://codraw-backend-mw58.onrender.com/api/auth/login", formData, { withCredentials: true });
+            await axios.post("http://codraw-backend-mw58.onrender.com/api/auth/login", formData, { withCredentials: true });
             setLoading(false);
             navigate("/");
         } catch (error) {
@@ -53,7 +53,7 @@ const Login = () => {
                         required
                     />
                     {error && <p className="text-red-500">{error}</p>}
-                    <button type="submit" className="bg-[#8f00ff] text-white text-2xl p-2 text-center rounded-[10px] cursor-pointer flex items-center justify-center gap-2">Login {loading && <Loader size={15} className="animate-spin"/>}</button>
+                    <button type="submit" disabled={loading} className="bg-[#8f00ff] text-white text-2xl p-2 text-center rounded-[10px] cursor-pointer flex items-center justify-center gap-2">Login {loading && <Loader size={15} className="animate-spin"/>}</button>
                     <p>Don't have an account? <Link to={'/register'} className="underline">Register</Link></p>
                 </form>
             </div>

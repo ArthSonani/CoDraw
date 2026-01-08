@@ -15,6 +15,7 @@
     "fabric": "^6.9.0",
     "firebase-admin": "^13.6.0",
     "lucide-react": "^0.554.0",
+    "react-hot-toast": "^2.4.1",
     "peerjs": "^1.5.5",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

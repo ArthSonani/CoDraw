@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Canvas } from "fabric";
 import io from "socket.io-client";
-import { Download, Group, Copy } from "lucide-react";
+import { Download, Copy } from "lucide-react";
 import axios from "axios";
 import GroupVoiceChat from "./GroupVoiceChat";
 import Loading from "./Loading"
@@ -14,6 +14,7 @@ const ViewWhiteboard = () => {
   const [fullId, setFullId] = useState(null);
   const [loading, setLoading] = useState(false);
   const socketRef = useRef(null);
+  const hasLoadedInitialRef = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,35 +45,48 @@ const ViewWhiteboard = () => {
   useEffect(() => {
     if (!canvas) return;
 
-    const socket = io("https://codraw-backend-mw58.onrender.com");
+    const socket = io("http://codraw-backend-mw58.onrender.com/");
     socketRef.current = socket;
 
     socket.emit("join-board", {boardId, data: null, role: 'viewer'});
 
     const handleInitialRender = ({data, boardId}) => {
       setFullId(boardId);
-      canvas.loadFromJSON(data, () => {
+      if (!data || !canvas) return;
+      try {
+        const json = typeof data === 'string' ? JSON.parse(data) : data;
+        if (!json || typeof json !== 'object') return;
+        canvas.loadFromJSON(json, () => {
           canvas.renderAll();
           canvas.calcOffset();
           canvas.requestRenderAll();
+          hasLoadedInitialRef.current = true;
           console.log("Canvas Drawn")
         });
+      } catch (err) {
+        console.error('Failed to render initial canvas JSON:', err);
+      }
     }
 
     socket.on('send-current-data', handleInitialRender);
 
     const handleCanvasUpdate = ({ boardId: incomingId, data }) => {
-        // console.log(data)
-      if (incomingId === boardId) {
-        canvas.loadFromJSON(data, () => {
-        canvas.getObjects().forEach((obj) => {
+      if (incomingId !== boardId || !canvas) return;
+      if (!data) return;
+      try {
+        const json = typeof data === 'string' ? JSON.parse(data) : data;
+        if (!json || typeof json !== 'object') return;
+        canvas.loadFromJSON(json, () => {
+          canvas.getObjects().forEach((obj) => {
             obj.selectable = false;
             obj.evented = false;
-            });
+          });
           canvas.renderAll();
           canvas.calcOffset();
           canvas.requestRenderAll();
         });
+      } catch (err) {
+        console.error('Failed to apply viewer canvas update JSON:', err);
       }
     };
 
@@ -103,7 +117,7 @@ const ViewWhiteboard = () => {
     try {
       // 1. Upload image preview to Cloudinary via backend
       const uploadResponse = await axios.post(
-        "https://codraw-backend-mw58.onrender.com/api/whiteboards/upload-preview",
+        "http://codraw-backend-mw58.onrender.com/api/whiteboards/upload-preview",
         { image: previewImage }, // send base64 string directly
         { withCredentials: true }
       );
@@ -112,7 +126,7 @@ const ViewWhiteboard = () => {
   
       // 2. Save the whiteboard with the image URL
       await axios.post(
-        "https://codraw-backend-mw58.onrender.com/api/whiteboards/save",
+        "http://codraw-backend-mw58.onrender.com/api/whiteboards/save",
         { boardId: newBoardId, data: whiteboardData, previewImage: cloudinaryUrl },
         { withCredentials: true }
       );
