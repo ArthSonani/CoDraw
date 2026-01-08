@@ -9,7 +9,7 @@ const Home = () => {
     const [joinCode, setJoinCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [deletingId, setDeletingId] = useState(null);
-    const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://co-draw-backend.vercel.app/';
+    const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'https://codraw-backend-mw58.onrender.com/';
  
     useEffect(() => {
         
