@@ -14,48 +14,70 @@ const Whiteboard = () => {
   const [brushWidth, setBrushWidth] = useState(5);
   const [freeDrawingEnabled, setFreeDrawingEnabled] = useState(false);
   const [initialData, setInitialData] = useState(null);
+  const location = useLocation();
   const navigate = useNavigate();
   const socketRef = useRef(null);
   const isUpdatingFromSocketRef = useRef(false);
+  const joinedRef = useRef(false);
   const [showAIModal, setShowAIModal] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
+  const attemptedCreateRef = useRef(false);
   
 
   // Load initial whiteboard data
   useEffect(() => {
-    if (!location.state?.data) {
-        axios.get(`http://localhost:3000/api/whiteboards/${boardId}`, { withCredentials: true })
-        .then(res => {
-          if (res.data?.data) setInitialData(res.data.data);
-        })
-        .catch(err => {
-          if (err.response && (err.response.status === 403)) {
+    const loadOrCreate = async () => {
+      if (!location.state?.data) {
+        try {
+          const res = await axios.get(
+            `http://localhost:3000/api/whiteboards/${boardId}`,
+            { withCredentials: true }
+          );
+          if (res.data?.data) {
+            setInitialData(res.data.data);
+            return;
+          }
+        } catch (err) {
+          const status = err?.response?.status;
+          if (status === 403) {
             alert('Access Denied. Redirecting to Home...');
             navigate('/');
-          }else if(err.response && err.response.status === 404){
-            console.warn('Whiteboard not found. Creating new one...');
-            if (canvas) {
-              const whiteboardData = JSON.stringify(canvas.toJSON());
-              const previewImage = canvas.toDataURL('image/png');
-
-              axios.post(
-                "http://localhost:3000/api/whiteboards/save",
-                { boardId, data: whiteboardData, previewImage },
-                { withCredentials: true }
-              )
-              .then(() => console.log("New whiteboard created and saved."))
-              .catch(err => console.error("Failed to create new whiteboard on 404:", err));
-            }
-          } 
-          else {
-            console.error('Error fetching whiteboard:', err);
+            return;
           }
-          
-        });
-    } else {
-      setInitialData(location.state.data);
-    }
-  }, [boardId, location.state?.data]);
+          if (status === 404) {
+            console.warn('Whiteboard not found. Creating new one...');
+            if (canvas && !attemptedCreateRef.current) {
+              attemptedCreateRef.current = true;
+              try {
+                const whiteboardData = JSON.stringify(canvas.toJSON());
+                const previewImage = canvas.toDataURL('image/png');
+                const uploadResponse = await axios.post(
+                  'http://localhost:3000/api/whiteboards/upload-preview',
+                  { image: previewImage },
+                  { withCredentials: true }
+                );
+                const cloudinaryUrl = uploadResponse.data.url;
+                await axios.post(
+                  'http://localhost:3000/api/whiteboards/save',
+                  { boardId, data: whiteboardData, previewImage: cloudinaryUrl },
+                  { withCredentials: true }
+                );
+                console.log('New whiteboard created and saved.');
+              } catch (saveErr) {
+                console.error('Failed to create new whiteboard on 404:', saveErr);
+                navigate('/');
+              }
+            }
+            return;
+          }
+          console.error('Error fetching whiteboard:', err);
+        }
+      } else {
+        setInitialData(location.state.data);
+      }
+    };
+    loadOrCreate();
+  }, [boardId, location.state?.data, canvas, navigate]);
 
   
 
@@ -115,13 +137,19 @@ const Whiteboard = () => {
       isUpdatingFromSocketRef.current = true;
       canvas.loadFromJSON(initialData, () => {
         canvas.renderAll();
-        canvas.calcOffset();
         canvas.requestRenderAll();
         isUpdatingFromSocketRef.current = false;
       });
-      socketRef.current.emit("join-board", {boardId, data: initialData, role: "host"});
     }
   }, [canvas, initialData]);
+
+  // Emit join once socket is ready
+  useEffect(() => {
+    if (socketRef.current && !joinedRef.current) {
+      socketRef.current.emit("join-board", { boardId, data: initialData ?? null, role: "host" });
+      joinedRef.current = true;
+    }
+  }, [boardId, initialData]);
 
   useEffect(() => {
     if(!canvas) return;
@@ -408,7 +436,7 @@ const Whiteboard = () => {
           <div 
             className='cursor-pointer w-full bg-gray-100 hover:bg-[#8f00ff]/80 hover:text-white flex items-center gap-2 p-[5px] font-mono rounded-[5px] text-sm' 
             onClick={() => {
-              const joinCode = boardId.slice(-6);
+              const joinCode = boardId;
               navigator.clipboard.writeText(joinCode)
                 .then(() => {
                   alert('Copied to Clipboard');
@@ -418,7 +446,7 @@ const Whiteboard = () => {
                 });
             }}
           >
-            {boardId.slice(-6)} <Copy size={15}/>
+            {boardId} <Copy size={15}/>
           </div>
         </div>
         <GroupVoiceChat boardId={boardId}/>

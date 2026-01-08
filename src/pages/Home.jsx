@@ -8,11 +8,13 @@ const Home = () => {
     const [whiteboards, setWhiteboards] = useState([]);
     const [joinCode, setJoinCode] = useState("");
     const [loading, setLoading] = useState(false);
-
+    const [deletingId, setDeletingId] = useState(null);
+    const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000';
+ 
     useEffect(() => {
         
         setLoading(true);
-        axios.get("http://localhost:3000/api/whiteboards", {
+        axios.get(`${API_BASE}/api/whiteboards`, {
             withCredentials: true // include the cookie
         })
         .then(res => {
@@ -22,8 +24,9 @@ const Home = () => {
         })
         .catch(err => {
             console.error("Error fetching whiteboards:", err);
+            setLoading(false);
         });
-    }, []);
+    }, [API_BASE]);
 
     const createWhiteboard = () => {
         const boardId = crypto.randomUUID();
@@ -33,6 +36,23 @@ const Home = () => {
     const handleJoinWhiteboard = () => {
         if (joinCode.trim()) {
             navigate(`/viewBoard/${joinCode.trim()}`);
+        }
+    };
+
+    const deleteWhiteboard = async (id) => {
+        if (!id) return;
+        const confirm = window.confirm("Are you sure you want to delete this whiteboard? This action cannot be undone.");
+        if (!confirm) return;
+        try {
+            setDeletingId(id);
+            await axios.delete(`${API_BASE}/api/whiteboards/${id}`, { withCredentials: true });
+            setWhiteboards(prev => prev.filter(b => b._id !== id));
+            // alert('Whiteboard deleted');
+        } catch (err) {
+            console.error('Failed to delete whiteboard:', err);
+            alert('Failed to delete whiteboard');
+        } finally {
+            setDeletingId(null);
         }
     };
 
@@ -66,7 +86,19 @@ const Home = () => {
                 ) : (
                     <div className="flex gap-3 flex-wrap">
                         {whiteboards.map(board => (
-                            <div key={board._id} className="p-3 group cursor-pointer bg-black hover:bg-gray-800 rounded-md flex flex-col gap-2 relative" onClick={() => navigate(`/board/${board._id}`, { state: { data: board.data } })}>
+                            <div
+                              key={board._id}
+                              className="p-3 group cursor-pointer bg-black hover:bg-gray-800 rounded-md flex flex-col gap-2 relative"
+                              onClick={() => navigate(`/board/${board._id}`, { state: { data: board.data } })}
+                            >
+                                <button
+                                  title="Delete"
+                                  className={`absolute top-2 right-2 inline-flex items-center justify-center rounded-md bg-white/90 hover:bg-red-600 hover:text-white transition-colors p-1 ${deletingId === board._id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                  onClick={(e) => { e.stopPropagation(); deleteWhiteboard(board._id); }}
+                                  disabled={deletingId === board._id}
+                                >
+                                  <Trash2 size={18} />
+                                </button>
                                 <img src={board.previewImage} alt="" width={300}/>
                                 <p className="font-mono text-white">Board {board._id.slice(-6)} (Created on {new Date(board.createdAt).toLocaleDateString()})</p>
                             </div>

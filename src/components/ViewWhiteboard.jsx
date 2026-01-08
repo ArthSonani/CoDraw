@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Canvas } from "fabric";
 import io from "socket.io-client";
-import { Download, Group, Save } from "lucide-react";
+import { Download, Group, Copy } from "lucide-react";
 import axios from "axios";
 import GroupVoiceChat from "./GroupVoiceChat";
 
@@ -47,9 +47,6 @@ const ViewWhiteboard = () => {
     socket.emit("join-board", {boardId, data: null, role: 'viewer'});
 
     const handleInitialRender = ({data, boardId}) => {
-      // console.log(data);
-      // console.log(data);
-      // console.log(boardId)
       setFullId(boardId);
       canvas.loadFromJSON(data, () => {
           canvas.renderAll();
@@ -63,7 +60,7 @@ const ViewWhiteboard = () => {
 
     const handleCanvasUpdate = ({ boardId: incomingId, data }) => {
         // console.log(data)
-      if (incomingId.slice(-6) === boardId) {
+      if (incomingId === boardId) {
         canvas.loadFromJSON(data, () => {
         canvas.getObjects().forEach((obj) => {
             obj.selectable = false;
@@ -93,10 +90,11 @@ const ViewWhiteboard = () => {
     link.click();
   };
 
-  const saveWhiteboard = async () => {
+  const cloneWhiteboard = async () => {
     if (!canvas) return;
     const whiteboardData = JSON.stringify(canvas.toJSON());
     const previewImage = canvas.toDataURL('image/png');
+    const newBoardId = crypto.randomUUID();
 
     try {
       // 1. Upload image preview to Cloudinary via backend
@@ -111,14 +109,14 @@ const ViewWhiteboard = () => {
       // 2. Save the whiteboard with the image URL
       await axios.post(
         "http://localhost:3000/api/whiteboards/save",
-        { boardId, data: whiteboardData, previewImage: cloudinaryUrl },
+        { boardId: newBoardId, data: whiteboardData, previewImage: cloudinaryUrl },
         { withCredentials: true }
       );
   
-      alert("Whiteboard saved successfully!");
+      alert("Whiteboard cloned successfully!");
     } catch (error) {
-      console.error("Error saving whiteboard:", error);
-      alert("Failed to save whiteboard");
+      console.error("Error cloning whiteboard:", error);
+      alert("Failed to clone whiteboard");
     }
   };
 
@@ -126,8 +124,8 @@ const ViewWhiteboard = () => {
     <div className="relative flex overflow-hidden min-h-screen">
       <canvas ref={canvasRef} />
       <div className="toolbar absolute top-[2%] z-[20] shadow-lg left-1/2 -translate-x-1/2 bg-gray-100 rounded-[10px] flex gap-5 px-3 py-3 justify-center  items-center">
-        <button onClick={saveWhiteboard} className='cursor-pointer bg-gray-100 hover:bg-blue-100 flex items-center gap-2 p-[10px] font-mono rounded-[10px] text-sm' title='Save Whiteboard'>
-          <Save size={20} /> Save Whiteboard
+        <button onClick={cloneWhiteboard} className='cursor-pointer bg-gray-100 hover:bg-blue-100 flex items-center gap-2 p-[10px] font-mono rounded-[10px] text-sm' title='Save Whiteboard'>
+          <Copy size={20} /> Clone Whiteboard
           </button>
         <button onClick={exportCanvasAsImage} className='cursor-pointer bg-gray-100 hover:bg-blue-100 flex items-center gap-2 p-[10px] font-mono rounded-[10px] text-sm'>
           <Download size={20} /> Export as PNG
