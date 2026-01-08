@@ -1,17 +1,20 @@
 import React, { useRef, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Canvas } from "fabric";
 import io from "socket.io-client";
 import { Download, Group, Copy } from "lucide-react";
 import axios from "axios";
 import GroupVoiceChat from "./GroupVoiceChat";
+import Loading from "./Loading"
 
 const ViewWhiteboard = () => {
   const { boardId } = useParams();
   const canvasRef = useRef(null);
   const [canvas, setCanvas] = useState(null);
   const [fullId, setFullId] = useState(null);
+  const [loading, setLoading] = useState(false);
   const socketRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const initCanvas = new Canvas(canvasRef.current, {
@@ -91,6 +94,7 @@ const ViewWhiteboard = () => {
   };
 
   const cloneWhiteboard = async () => {
+    setLoading(true);
     if (!canvas) return;
     const whiteboardData = JSON.stringify(canvas.toJSON());
     const previewImage = canvas.toDataURL('image/png');
@@ -113,27 +117,32 @@ const ViewWhiteboard = () => {
         { withCredentials: true }
       );
   
-      alert("Whiteboard cloned successfully!");
+      setLoading(false);
+      navigate("/")
     } catch (error) {
+      setLoading(false);
       console.error("Error cloning whiteboard:", error);
       alert("Failed to clone whiteboard");
     }
   };
 
   return (
-    <div className="relative flex overflow-hidden min-h-screen">
-      <canvas ref={canvasRef} />
-      <div className="toolbar absolute top-[2%] z-[20] shadow-lg left-1/2 -translate-x-1/2 bg-gray-100 rounded-[10px] flex gap-5 px-3 py-3 justify-center  items-center">
-        <button onClick={cloneWhiteboard} className='cursor-pointer bg-gray-100 hover:bg-blue-100 flex items-center gap-2 p-[10px] font-mono rounded-[10px] text-sm' title='Save Whiteboard'>
-          <Copy size={20} /> Clone Whiteboard
+    <>
+      {loading && <Loading />}
+      <div className="relative flex overflow-hidden min-h-screen">
+        <canvas ref={canvasRef} />
+        <div className="toolbar absolute top-[2%] z-[20] shadow-lg left-1/2 -translate-x-1/2 bg-gray-100 rounded-[10px] flex gap-5 px-3 py-3 justify-center  items-center">
+          <button onClick={cloneWhiteboard} className='cursor-pointer bg-gray-100 hover:bg-blue-100 flex items-center gap-2 p-[10px] font-mono rounded-[10px] text-sm' title='Save Whiteboard'>
+            <Copy size={20} /> Clone Whiteboard
+            </button>
+          <button onClick={exportCanvasAsImage} className='cursor-pointer bg-gray-100 hover:bg-blue-100 flex items-center gap-2 p-[10px] font-mono rounded-[10px] text-sm'>
+            <Download size={20} /> Export as PNG
           </button>
-        <button onClick={exportCanvasAsImage} className='cursor-pointer bg-gray-100 hover:bg-blue-100 flex items-center gap-2 p-[10px] font-mono rounded-[10px] text-sm'>
-          <Download size={20} /> Export as PNG
-        </button>
-        {fullId && <GroupVoiceChat boardId={fullId}/>}
+          {fullId && <GroupVoiceChat boardId={fullId}/>}
+        </div>
+        
       </div>
-      
-    </div>
+    </>
   );
 };
 

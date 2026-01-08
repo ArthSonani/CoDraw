@@ -1,1 +1,18 @@
-@import "tailwindcss"
+@import "tailwindcss";
+
+/* Custom flicker animation utility */
+@keyframes flicker {
+	0%, 18%, 22%, 60%, 64%, 100% {
+		opacity: 1;
+		filter: drop-shadow(0 0 2px rgba(255,255,255,0.35))
+						drop-shadow(0 0 8px rgba(255,255,255,0.25));
+	}
+	20%, 62% {
+		opacity: 0.4;
+		filter: none;
+	}
+}
+
+.animate-flicker {
+	animation: flicker 1.8s ease-in-out infinite;
+}
