@@ -45,7 +45,7 @@ const ViewWhiteboard = () => {
   useEffect(() => {
     if (!canvas) return;
 
-    const socket = io("http://codraw-backend-mw58.onrender.com/");
+    const socket = io("https://codraw-backend-mw58.onrender.com/");
     socketRef.current = socket;
 
     socket.emit("join-board", {boardId, data: null, role: 'viewer'});
@@ -117,7 +117,7 @@ const ViewWhiteboard = () => {
     try {
       // 1. Upload image preview to Cloudinary via backend
       const uploadResponse = await axios.post(
-        "http://codraw-backend-mw58.onrender.com/api/whiteboards/upload-preview",
+        "https://codraw-backend-mw58.onrender.com/api/whiteboards/upload-preview",
         { image: previewImage }, // send base64 string directly
         { withCredentials: true }
       );
@@ -126,7 +126,7 @@ const ViewWhiteboard = () => {
   
       // 2. Save the whiteboard with the image URL
       await axios.post(
-        "http://codraw-backend-mw58.onrender.com/api/whiteboards/save",
+        "https://codraw-backend-mw58.onrender.com/api/whiteboards/save",
         { boardId: newBoardId, data: whiteboardData, previewImage: cloudinaryUrl },
         { withCredentials: true }
       );

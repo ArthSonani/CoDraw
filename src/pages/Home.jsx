@@ -14,7 +14,7 @@ const Home = () => {
     useEffect(() => {
         
         setLoading(true);
-        axios.get(`http://codraw-backend-mw58.onrender.com/api/whiteboards`, {
+        axios.get(`https://codraw-backend-mw58.onrender.com/api/whiteboards`, {
             withCredentials: true // include the cookie
         })
         .then(res => {
@@ -46,7 +46,7 @@ const Home = () => {
         setLoading(true);
         try {
             setDeletingId(id);
-            await axios.delete(`http://codraw-backend-mw58.onrender.com/api/whiteboards/${id}`, { withCredentials: true });
+            await axios.delete(`https://codraw-backend-mw58.onrender.com/api/whiteboards/${id}`, { withCredentials: true });
             setWhiteboards(prev => prev.filter(b => b._id !== id));
             // alert('Whiteboard deleted');
         } catch (err) {

@@ -35,7 +35,7 @@ const Whiteboard = () => {
       if (!location.state?.data) {
         try {
           const res = await axios.get(
-            `http://codraw-backend-mw58.onrender.com/api/whiteboards/${boardId}`,
+            `https://codraw-backend-mw58.onrender.com/api/whiteboards/${boardId}`,
             { withCredentials: true }
           );
           if (res.data?.data) {
@@ -57,13 +57,13 @@ const Whiteboard = () => {
                 const whiteboardData = JSON.stringify(canvas.toJSON());
                 const previewImage = canvas.toDataURL('image/png');
                 const uploadResponse = await axios.post(
-                  'http://codraw-backend-mw58.onrender.com/api/whiteboards/upload-preview',
+                  'https://codraw-backend-mw58.onrender.com/api/whiteboards/upload-preview',
                   { image: previewImage },
                   { withCredentials: true }
                 );
                 const cloudinaryUrl = uploadResponse.data.url;
                 await axios.post(
-                  'http://codraw-backend-mw58.onrender.com/api/whiteboards/save',
+                  'https://codraw-backend-mw58.onrender.com/api/whiteboards/save',
                   { boardId, data: whiteboardData, previewImage: cloudinaryUrl },
                   { withCredentials: true }
                 );
@@ -158,7 +158,7 @@ const Whiteboard = () => {
 
   useEffect(() => {
     if(!canvas) return;
-    const socket = io("http://codraw-backend-mw58.onrender.com/");
+    const socket = io("https://codraw-backend-mw58.onrender.com/");
     socketRef.current = socket;
   
     const handleCanvasUpdate = ({ boardId: incomingId, data }) => {
@@ -176,7 +176,7 @@ const Whiteboard = () => {
 
     socket.on("viewer-joined", ({ boardId, socketId, timestamp }) => {
       toast.success("A viewer joined Whiteboard");
-      fetch('http://codraw-backend-mw58.onrender.com/api/metrics', {
+      fetch('https://codraw-backend-mw58.onrender.com/api/metrics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -228,7 +228,7 @@ const Whiteboard = () => {
     try {
       // 1. Upload image preview to Cloudinary via backend
       const uploadResponse = await axios.post(
-        "http://codraw-backend-mw58.onrender.com/api/whiteboards/upload-preview",
+        "https://codraw-backend-mw58.onrender.com/api/whiteboards/upload-preview",
         { image: previewImage }, // send base64 string directly
         { withCredentials: true }
       );
@@ -237,12 +237,12 @@ const Whiteboard = () => {
   
       // 2. Save the whiteboard with the image URL
         await axios.post(
-        "http://codraw-backend-mw58.onrender.com/api/whiteboards/save",
+        "https://codraw-backend-mw58.onrender.com/api/whiteboards/save",
         { boardId, data: whiteboardData, previewImage: cloudinaryUrl },
         { withCredentials: true }
       );
 
-      fetch('http://codraw-backend-mw58.onrender.com/api/metrics', {
+      fetch('https://codraw-backend-mw58.onrender.com/api/metrics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -277,7 +277,7 @@ const Whiteboard = () => {
     if (!aiPrompt) return;
   
     try {
-      const res = await fetch('http://codraw-backend-mw58.onrender.com/api/text-to-drawing', {
+      const res = await fetch('https://codraw-backend-mw58.onrender.com/api/text-to-drawing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: aiPrompt })
@@ -307,7 +307,7 @@ const Whiteboard = () => {
         }
       });
 
-      fetch('http://codraw-backend-mw58.onrender.com/api/metrics', {
+      fetch('https://codraw-backend-mw58.onrender.com/api/metrics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
