@@ -17,7 +17,7 @@ const Login = () => {
         e.preventDefault();
             setLoading(true);
         try {
-            await axios.post("http://localhost:3000/api/auth/login", formData, { withCredentials: true });
+            await axios.post("https://co-draw-backend.vercel.app/api/auth/login", formData, { withCredentials: true });
             setLoading(false);
             navigate("/");
         } catch (error) {

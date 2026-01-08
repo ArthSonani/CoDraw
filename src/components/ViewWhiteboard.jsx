@@ -41,7 +41,7 @@ const ViewWhiteboard = () => {
   useEffect(() => {
     if (!canvas) return;
 
-    const socket = io("http://localhost:3000/");
+    const socket = io("https://co-draw-backend.vercel.app/");
     socketRef.current = socket;
 
     socket.emit("join-board", {boardId, data: null, role: 'viewer'});
@@ -99,7 +99,7 @@ const ViewWhiteboard = () => {
     try {
       // 1. Upload image preview to Cloudinary via backend
       const uploadResponse = await axios.post(
-        "http://localhost:3000/api/whiteboards/upload-preview",
+        "https://co-draw-backend.vercel.app/api/whiteboards/upload-preview",
         { image: previewImage }, // send base64 string directly
         { withCredentials: true }
       );
@@ -108,7 +108,7 @@ const ViewWhiteboard = () => {
   
       // 2. Save the whiteboard with the image URL
       await axios.post(
-        "http://localhost:3000/api/whiteboards/save",
+        "https://co-draw-backend.vercel.app/api/whiteboards/save",
         { boardId: newBoardId, data: whiteboardData, previewImage: cloudinaryUrl },
         { withCredentials: true }
       );

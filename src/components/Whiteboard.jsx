@@ -30,7 +30,7 @@ const Whiteboard = () => {
       if (!location.state?.data) {
         try {
           const res = await axios.get(
-            `http://localhost:3000/api/whiteboards/${boardId}`,
+            `https://co-draw-backend.vercel.app/api/whiteboards/${boardId}`,
             { withCredentials: true }
           );
           if (res.data?.data) {
@@ -52,13 +52,13 @@ const Whiteboard = () => {
                 const whiteboardData = JSON.stringify(canvas.toJSON());
                 const previewImage = canvas.toDataURL('image/png');
                 const uploadResponse = await axios.post(
-                  'http://localhost:3000/api/whiteboards/upload-preview',
+                  'https://co-draw-backend.vercel.app/api/whiteboards/upload-preview',
                   { image: previewImage },
                   { withCredentials: true }
                 );
                 const cloudinaryUrl = uploadResponse.data.url;
                 await axios.post(
-                  'http://localhost:3000/api/whiteboards/save',
+                  'https://co-draw-backend.vercel.app/api/whiteboards/save',
                   { boardId, data: whiteboardData, previewImage: cloudinaryUrl },
                   { withCredentials: true }
                 );
@@ -153,7 +153,7 @@ const Whiteboard = () => {
 
   useEffect(() => {
     if(!canvas) return;
-    const socket = io("http://localhost:3000/");
+    const socket = io("https://co-draw-backend.vercel.app/");
     socketRef.current = socket;
   
     const handleCanvasUpdate = ({ boardId: incomingId, data }) => {
@@ -171,7 +171,7 @@ const Whiteboard = () => {
 
     socket.on("viewer-joined", ({ boardId, socketId, timestamp }) => {
       alert(`A viewer has joined board ${boardId}`);
-      fetch('/api/metrics', {
+      fetch('https://co-draw-backend.vercel.app/api/metrics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -206,7 +206,7 @@ const Whiteboard = () => {
     try {
       // 1. Upload image preview to Cloudinary via backend
       const uploadResponse = await axios.post(
-        "http://localhost:3000/api/whiteboards/upload-preview",
+        "https://co-draw-backend.vercel.app/api/whiteboards/upload-preview",
         { image: previewImage }, // send base64 string directly
         { withCredentials: true }
       );
@@ -215,12 +215,12 @@ const Whiteboard = () => {
   
       // 2. Save the whiteboard with the image URL
         await axios.post(
-        "http://localhost:3000/api/whiteboards/save",
+        "https://co-draw-backend.vercel.app/api/whiteboards/save",
         { boardId, data: whiteboardData, previewImage: cloudinaryUrl },
         { withCredentials: true }
       );
 
-      fetch('/api/metrics', {
+      fetch('https://co-draw-backend.vercel.app/api/metrics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -254,7 +254,7 @@ const Whiteboard = () => {
     if (!aiPrompt) return;
   
     try {
-      const res = await fetch('/api/text-to-drawing', {
+      const res = await fetch('https://co-draw-backend.vercel.app/api/text-to-drawing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: aiPrompt })
@@ -284,7 +284,7 @@ const Whiteboard = () => {
         }
       });
 
-      fetch('/api/metrics', {
+      fetch('https://co-draw-backend.vercel.app/api/metrics', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
