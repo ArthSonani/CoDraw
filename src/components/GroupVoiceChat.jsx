@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Peer from "peerjs";
 import { io } from "socket.io-client";
 import { Mic, MicOff, Volume2, VolumeX, PhoneOff, Phone } from "lucide-react";

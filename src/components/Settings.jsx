@@ -213,7 +213,8 @@ const Settings = ({ canvas }) => {
                         <input type="color" value={color} onChange={handleColorChange} className="block"/>
                 </div>
             )}
-            { selectedObject.type === "circle" && (
+
+            {selectedObject.type === "circle" && (
                 <div className="max-w-[200px]">
                     <div className="flex flex-col gap-2">
                         <label className="text-black text-sm">Opacity:</label>

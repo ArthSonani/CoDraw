@@ -19,7 +19,7 @@ const Navbar = () => {
             }
         };
         fetchUser();
-    }, []);
+    }, [user]);
 
     const handleLogout = async () => {
         try {

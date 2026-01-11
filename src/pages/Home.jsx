@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Trash, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import Loading from "../components/Loading";
 
 const Home = () => {
@@ -48,7 +48,6 @@ const Home = () => {
             setDeletingId(id);
             await axios.delete(`https://codraw-backend-mw58.onrender.com/api/whiteboards/${id}`, { withCredentials: true });
             setWhiteboards(prev => prev.filter(b => b._id !== id));
-            // alert('Whiteboard deleted');
         } catch (err) {
             console.error('Failed to delete whiteboard:', err);
             alert('Failed to delete whiteboard');
@@ -89,17 +88,17 @@ const Home = () => {
                         <div className="flex gap-3 flex-wrap">
                             {whiteboards.map(board => (
                                 <div
-                                key={board._id}
-                                className="p-3 group cursor-pointer bg-black hover:bg-gray-800 rounded-md flex flex-col gap-2 relative"
-                                onClick={() => navigate(`/board/${board._id}`, { state: { data: board.data } })}
+                                    key={board._id}
+                                    className="p-3 group cursor-pointer bg-black hover:bg-gray-800 rounded-md flex flex-col gap-2 relative"
+                                    onClick={() => navigate(`/board/${board._id}`, { state: { data: board.data } })}
                                 >
                                     <button
-                                    title="Delete"
-                                    className={`absolute top-2 right-2 inline-flex items-center justify-center rounded-md bg-white/90 hover:bg-red-600 hover:text-white transition-colors p-1 ${deletingId === board._id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    onClick={(e) => { e.stopPropagation(); deleteWhiteboard(board._id); }}
-                                    disabled={deletingId === board._id}
+                                        title="Delete"
+                                        className={`absolute top-2 right-2 inline-flex items-center justify-center rounded-md bg-white/90 hover:bg-red-600 hover:text-white transition-colors p-1 ${deletingId === board._id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        onClick={(e) => { e.stopPropagation(); deleteWhiteboard(board._id); }}
+                                        disabled={deletingId === board._id}
                                     >
-                                    <Trash2 size={18} />
+                                        <Trash2 size={18} />
                                     </button>
                                     <img src={board.previewImage} alt="" width={300}/>
                                     <p className="font-mono text-white">Board {board._id.slice(-6)} (Created on {new Date(board.createdAt).toLocaleDateString()})</p>
