@@ -12,6 +12,7 @@ const Navbar = () => {
                 const response = await axios.get("https://codraw-backend-mw58.onrender.com/api/auth/me", {
                     withCredentials: true,
                 });
+                console.log("user", response);
                 setUser(response.data.user);
             } catch (error) {
                 setUser(null);
@@ -19,7 +20,7 @@ const Navbar = () => {
             }
         };
         fetchUser();
-    }, [user]);
+    }, []);
 
     const handleLogout = async () => {
         try {
